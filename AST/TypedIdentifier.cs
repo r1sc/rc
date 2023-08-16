@@ -1,25 +1,23 @@
-﻿using static cccc.Lexer;
-using Superpower;
+﻿using Superpower;
 
-namespace cccc.AST
+namespace cccc.AST;
+
+public class TypedIdentifier
 {
-    public class TypedIdentifier
+    public required TypeNode Type { get; set; }
+    public required string Name { get; set; }
+
+    public override string ToString()
     {
-        public required TypeNode Type { get; set; }
-        public required string Name { get; set; }
-
-        public override string ToString()
-        {
-            return $"{Type} {Name}";
-        }
-
-        public static TokenListParser<Tokens, TypedIdentifier> TypedIdentifierParser =
-                from type in TypeNode.TypeParser
-                from name in Identifier.IdentifierParser
-                select new TypedIdentifier
-                {
-                    Type = type,
-                    Name = name
-                };
+        return $"{Type} {Name}";
     }
+
+    public static TokenListParser<Tokens, TypedIdentifier> TypedIdentifierParser =
+            from type in TypeNode.TypeParser
+            from name in Identifier.IdentifierParser
+            select new TypedIdentifier
+            {
+                Type = type,
+                Name = name
+            };
 }
