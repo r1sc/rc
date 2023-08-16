@@ -8,6 +8,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="libLLVM" Version="16.0.6" />
+    <PackageReference Include="libLLVM.runtime.win-x64" Version="16.0.6" />
+    <PackageReference Include="LLVMSharp" Version="16.0.0" />
     <PackageReference Include="Superpower" Version="3.0.0" />
   </ItemGroup>
 
