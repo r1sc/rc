@@ -26,9 +26,9 @@ public class VariableExpr : ExprNode
         var variable = codegenScope.GetVariable(Name);
         return Indirection switch
         {
-            IndirectionKind.None => codegenScope.Builder.BuildLoad2(variable.Storage.TypeOf, variable.Storage),
+            IndirectionKind.None => codegenScope.Builder.BuildLoad2(variable.TypeRef.GetLLVMType(), variable.Storage),
             IndirectionKind.AddressOf => variable.Storage,
-            IndirectionKind.Dereference => codegenScope.Builder.BuildLoad2(variable.Storage.TypeOf, codegenScope.Builder.BuildLoad2(variable.Storage.TypeOf, variable.Storage)),
+            IndirectionKind.Dereference => codegenScope.Builder.BuildLoad2(variable.TypeRef.GetLLVMType(), codegenScope.Builder.BuildLoad2(variable.TypeRef.GetLLVMType(), variable.Storage)),
             _ => throw new ArgumentOutOfRangeException(),
         };
     }

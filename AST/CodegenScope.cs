@@ -41,7 +41,7 @@ public class CodegenScope
 
     public void DefineVariable(string name, TypeRef typeRef)
     {
-        if (_variables.ContainsKey(name)) throw new Exception("Variable already defined");
+        if (_variables.ContainsKey(name)) throw new Exception($"Variable '{name}' already defined");
 
         var storage = Builder.BuildAlloca(typeRef.GetLLVMType());
         _variables.Add(name, new VarRef { Storage = storage, TypeRef = typeRef });
@@ -55,12 +55,12 @@ public class CodegenScope
         {
             return parentVar;
         }
-        throw new Exception("Variable not defined");
+        throw new Exception($"Variable '{name}' not defined");
     }
 
     public FuncRef DefineFunction(string name, TypeRef returnType, IEnumerable<TypedIdentifier> parameters, bool isVarArg)
     {
-        if (_functions.ContainsKey(name)) throw new Exception("Function already defined");
+        if (_functions.ContainsKey(name)) throw new Exception($"Function '{name}' already defined");
 
         var funcType = LLVMTypeRef.CreateFunction(
             returnType.GetLLVMType(),
@@ -80,7 +80,7 @@ public class CodegenScope
         if (_functions.TryGetValue(name, out var value)) return value;
         var parentFunction = Parent?.GetFunction(name);
         if (parentFunction != null) return parentFunction;
-        throw new Exception("Function not defined");
+        throw new Exception($"Function '{name}' not defined");
     }
 
 }

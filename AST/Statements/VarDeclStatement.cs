@@ -24,11 +24,14 @@ public class VarDeclStatement : Statement
 
     public override void Codegen(CodegenScope codegenScope)
     {
+        var varTypeRef = Identifier.Type.GetTypeRef();
+        var expressionVal = Expression?.Codegen(codegenScope, varTypeRef);
         codegenScope.DefineVariable(Identifier.Name, Identifier.Type.GetTypeRef());
-        if(Expression != null)
+
+        if(expressionVal.HasValue)
         {
             var variable = codegenScope.GetVariable(Identifier.Name);
-            codegenScope.Builder.BuildStore(Expression.Codegen(codegenScope, variable.TypeRef), variable.Storage);
+            codegenScope.Builder.BuildStore(expressionVal.Value, variable.Storage);
         }
     }
 }

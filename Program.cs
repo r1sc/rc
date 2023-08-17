@@ -12,7 +12,8 @@ class Program
         var src = @"extern void printf(u8* format)...;
 
 void main() {
-	u32 i = 5;
+    u32 u = 4;
+	u32 i = u * u;
     printf(""Hello %d"", i);
 }";
 
