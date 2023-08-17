@@ -2,8 +2,12 @@
 
 namespace cccc.AST.Statements;
 
-public abstract class TopLevelStatement
+public abstract class TopLevelStatement : Statement
 {
-    public static TokenListParser<Tokens, TopLevelStatement> TopLevelStatementParser =
+    static TokenListParser<Tokens, TopLevelStatement> TopLevelStatementParser =
         ExternDecl.ExternParser.Or(FuncDefNode.FuncDefParser);
+
+    public static TokenListParser<Tokens, TopLevelStatement[]> FileParser =
+        from statements in TopLevelStatementParser.Many().AtEnd()
+        select statements;
 }

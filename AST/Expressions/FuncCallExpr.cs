@@ -1,4 +1,5 @@
-﻿using Superpower;
+﻿using LLVMSharp.Interop;
+using Superpower;
 using Superpower.Parsers;
 
 namespace cccc.AST.Expressions;
@@ -19,4 +20,45 @@ public class FuncCallExpr : ExprNode
             Name = name,
             Arguments = args
         } as ExprNode;
+
+    public override LLVMValueRef Codegen(CodegenScope codegenScope, TypeRef wanted)
+    {
+        var func = codegenScope.GetFunction(Name);
+        if (!func.IsVarArg && Arguments.Count() != func.Parameters.Count())
+        {
+            throw new Exception("Number of parameters does not match");
+        }
+
+        var args = func.IsVarArg switch
+        {
+            true => Arguments
+                .Take(func.Parameters.Count())
+                .Zip(func.Parameters)
+                .Select(arg =>
+                    arg.First.Codegen(codegenScope, arg.Second.Type.GetTypeRef())
+                )
+                .Concat(
+                    Arguments
+                    .Skip(func.Parameters.Count())
+                    .Select(arg =>
+                        arg.Codegen(codegenScope, arg.InferType(codegenScope))
+                    )
+                )
+                .ToArray(),
+            false => Arguments
+                .Zip(func.Parameters)
+                .Select(arg =>
+                    arg.First.Codegen(codegenScope, arg.Second.Type.GetTypeRef())
+                )
+                .ToArray()
+        };
+
+        return codegenScope.Builder.BuildCall2(func.LLVMFuncType, func.LLVMFuncValue, args);
+    }
+
+    public override TypeRef InferType(CodegenScope codegenScope)
+    {
+        var func = codegenScope.GetFunction(Name);
+        return func.ReturnType;
+    }
 }

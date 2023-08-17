@@ -21,4 +21,29 @@ public class TypeNode
             TypeName = typename.ToStringValue(),
             NumIndirections = indirections.Length
         };
+
+
+    public TypeRef GetTypeRef()
+    {
+        if (NumIndirections > 0)
+        {
+            var typeRef = new TypeNode { TypeName = TypeName, NumIndirections = NumIndirections - 1 }.GetTypeRef();
+            return new PointerTypeRef { Inner = typeRef };
+        }
+
+        if (TypeName.Length > 1 && (TypeName[0] == 'i' || TypeName[0] == 'u') && int.TryParse(TypeName[1..], out var bits))
+        {
+            var signed = TypeName[0] == 'i';
+            return new NumberTypeRef { NumBits = (uint)bits, Signed = signed };
+        }
+
+        var baseType = TypeName switch
+        {
+            "void" => (TypeRef)new VoidTypeRef(),
+            "..." => new VarArgsTypeRef(),
+            _ => throw new Exception("Blah")
+        }; ;
+
+        return baseType;
+    }
 }

@@ -4,7 +4,7 @@ using Superpower.Parsers;
 
 namespace cccc.AST.Statements;
 
-public class VarDecl : Statement
+public class VarDeclStatement : Statement
 {
     public required TypedIdentifier Identifier { get; set; }
     public required ExprNode? Expression { get; set; }
@@ -16,9 +16,19 @@ public class VarDecl : Statement
             from expr in Parse.Ref(() => StringExpr.StringParser.Or(ExprNode.ExprParser))
             select expr
         ).OptionalOrDefault()
-        select new VarDecl
+        select new VarDeclStatement
         {
             Identifier = typed_ident,
             Expression = expression
         } as Statement;
+
+    public override void Codegen(CodegenScope codegenScope)
+    {
+        codegenScope.DefineVariable(Identifier.Name, Identifier.Type.GetTypeRef());
+        if(Expression != null)
+        {
+            var variable = codegenScope.GetVariable(Identifier.Name);
+            codegenScope.Builder.BuildStore(Expression.Codegen(codegenScope, variable.TypeRef), variable.Storage);
+        }
+    }
 }

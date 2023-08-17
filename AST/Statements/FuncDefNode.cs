@@ -21,4 +21,23 @@ public class FuncDefNode : TopLevelStatement
                 Parameters = parameters,
                 Scope = scope
             } as TopLevelStatement;
+
+    public override void Codegen(CodegenScope codegenScope)
+    {
+        var funcRef = codegenScope.DefineFunction(Ident.Name, Ident.Type.GetTypeRef(), Parameters, false);
+
+        var funcBlock = funcRef.LLVMFuncValue.AppendBasicBlock("entry");
+        var builder = codegenScope.Module.Context.CreateBuilder();
+        builder.Position(funcBlock, funcBlock.FirstInstruction);
+
+        Scope.Codegen(new CodegenScope(codegenScope, builder));
+
+        if(funcRef.ReturnType is VoidTypeRef)
+        {
+            builder.BuildRetVoid();
+        } else
+        {
+            throw new Exception("Return statement not supported yet");
+        }
+    }
 }

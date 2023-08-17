@@ -1,35 +1,36 @@
-﻿using Superpower;
-using cccc;
+﻿using cccc.AST;
+using LLVMSharp.Interop;
+using Superpower;
 using System.Diagnostics;
-using cccc.AST;
+
+namespace cccc;
 
 class Program
 {
-    
-
     static void Main(string[] args)
     {
-       
-
-        var src = @"extern void puts(u8* str);
-extern u8* itoa(i32 value, u8* str, i32 base);
+        var src = @"extern void printf(u8* format)...;
 
 void main() {
-	u8* hello_world = ""Hello world!\n"";
-    u32 apa = 23 + 62 * (15 - 2);
-    u3 hej = 200;
-	puts(hello_world);
+	u32 i = 5;
+    printf(""Hello %d"", i);
 }";
 
-
         var tokens = Lexer.Tokenizer.Tokenize(src);
-        var ast = AST.FileParser.Parse(tokens);
-        var modbuilder = new ModBuilder("file.ec", LLVMSharp.Interop.LLVMContextRef.Global);
-        var mod = modbuilder.Build(ast);
+        var ast = AST.Statements.TopLevelStatement.FileParser.Parse(tokens);
+
+        var llvmContext = LLVMContextRef.Create();
+        var mod = llvmContext.CreateModuleWithName("file.ec");
+        var codegenScope = new CodegenScope(mod, mod.Context.CreateBuilder());
+
+        foreach (var statement in ast)
+        {
+            statement.Codegen(codegenScope);
+        }
+
         mod.Dump();
         mod.PrintToFile("file.ll");
-        Process.Start("clang.exe", "file.ll -o file.exe");
-        
-        //TypeCheck.DoTopLevel(ast);
+        Process.Start("clang.exe", "file.ll -o file.exe").WaitForExit();
+        Process.Start("file.exe").WaitForExit();
     }
 }

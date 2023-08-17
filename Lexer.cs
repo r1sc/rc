@@ -21,7 +21,11 @@ public enum Tokens
     Div,
     Mul,
     Eq,
-    Comma
+    Comma,
+    Ampersand,
+    Vararg,
+    LessThen,
+    GreaterThen
 }
 
 public class Lexer
@@ -50,6 +54,10 @@ public class Lexer
         .Match(Character.In('*'), Tokens.Mul)
         .Match(Character.In('='), Tokens.Eq)
         .Match(Character.In(','), Tokens.Comma)
+        .Match(Character.In('&'), Tokens.Ampersand)
+        .Match(Character.In('<'), Tokens.LessThen)
+        .Match(Character.In('>'), Tokens.GreaterThen)
+        .Match(Span.EqualTo("..."), Tokens.Vararg)
         .Build();
 
 }

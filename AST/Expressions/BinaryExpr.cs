@@ -1,11 +1,15 @@
-﻿namespace cccc.AST.Expressions;
+﻿using LLVMSharp.Interop;
+
+namespace cccc.AST.Expressions;
 
 public enum Operator
 {
     Plus,
     Minus,
     Mul,
-    Div
+    Div,
+    LessThen,
+    GreaterThen
 }
 
 public class BinaryExpr : ExprNode
@@ -14,31 +18,28 @@ public class BinaryExpr : ExprNode
     public required Operator Op { get; set; }
     public required ExprNode Right { get; set; }
 
-
-    public ExprNode FlattenConstants()
+    public override LLVMValueRef Codegen(CodegenScope codegenScope, TypeRef wanted)
     {
-        var l = Left is BinaryExpr ll ? ll.FlattenConstants() : Left;
-        var r = Right is BinaryExpr rr ? rr.FlattenConstants() : Right;
-
-        if (l is NumberExpr ln && r is NumberExpr rn)
+        if (wanted is NumberTypeRef numType)
         {
-            switch (Op)
+            var left = Left.Codegen(codegenScope, numType);
+            var right = Right.Codegen(codegenScope, numType);
+            return Op switch
             {
-                case Operator.Plus:
-                    return new NumberExpr { Value = ln.Value + rn.Value };
-                case Operator.Minus:
-                    return new NumberExpr { Value = ln.Value - rn.Value };
-                case Operator.Mul:
-                    return new NumberExpr { Value = ln.Value * rn.Value };
-                case Operator.Div:
-                    return new NumberExpr { Value = ln.Value / rn.Value };
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+                Operator.Plus => codegenScope.Builder.BuildAdd(left, right),
+                Operator.Minus => codegenScope.Builder.BuildSub(left, right),
+                Operator.Mul => codegenScope.Builder.BuildMul(left, right),
+                Operator.Div => numType.Signed ? codegenScope.Builder.BuildSDiv(left, right) : codegenScope.Builder.BuildUDiv(left, right),
+                Operator.LessThen => codegenScope.Builder.BuildICmp(numType.Signed ? LLVMIntPredicate.LLVMIntSLT : LLVMIntPredicate.LLVMIntULT, left, right),
+                Operator.GreaterThen => codegenScope.Builder.BuildICmp(numType.Signed ? LLVMIntPredicate.LLVMIntSGT : LLVMIntPredicate.LLVMIntUGT, left, right),
+                _ => throw new ArgumentOutOfRangeException(),
+            };
         }
-        else
-        {
-            return this;
-        }
+        throw new Exception("Binary operations only available on numeric types");
+    }
+
+    public override TypeRef InferType(CodegenScope codegenScope)
+    {
+        return Left.InferType(codegenScope);
     }
 }
